@@ -5,6 +5,8 @@ import (
 	"errors"
 	"nishant/internal/data"
 	"nishant/internal/models"
+	"nishant/utils"
+
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -32,8 +34,12 @@ func (s *UserService) CreateUser(ctx context.Context, user *models.User) (*model
 		return nil, errors.New("user already registered")
 	}
 
-	// have to hash the password
-
+	// hash the password
+	hashed, err := utils.HashPassword(user.Password)
+	if err != nil {
+		return nil, err
+	}
+	user.Password = hashed
 	return s.userStore.CreateUser(ctx, user)
 }
 
@@ -43,8 +49,16 @@ func (s *UserService) Login(ctx context.Context, email, password string) (string
 		return "", err
 	}
 	// check if password is correct
+	err = utils.CheckPasswordHash(password, user.Password)
+	if err != nil {
+		return "", errors.New("invalid password")
+	}
 
+	// generate jwt token
+	token, err := utils.GenerateJWT(user.Id.Hex())
+	if err != nil {
+		return "", errors.New("unable to generate jwt")
+	}
+	return token, nil
 
-	//have to generate jwt token
-	return "",nil
 }
