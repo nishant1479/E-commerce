@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"nishant/internal/data"
 	"nishant/internal/models"
 )
@@ -26,4 +27,22 @@ func (s *ProductService) GetAllProduct(ctx context.Context) ([]*model.Product, e
 
 func (s *ProductService) GetProductById(ctx context.Context, id string) (*model.Product, error) {
 	return s.productStore.GetProductById(ctx, id)
+}
+
+func (s *ProductService) DeleteProduct(ctx context.Context, id string) error {
+	return s.productStore.DeleteProduct(ctx, id)
+}
+
+func (s *ProductService) CreateProduct(ctx context.Context, product *model.Product) error {
+	// check if product is already created
+	_, err := s.productStore.FindProductByName(ctx, product.Name)
+	if err == nil {
+		return errors.New("product already exists")
+	}
+
+	return s.productStore.CreateProduct(ctx, product)
+}
+
+func (s *ProductService) ModifyProduct(ctx context.Context, newProduct *model.Product) error {
+	return s.productStore.ModifyProduct(ctx, newProduct)
 }
